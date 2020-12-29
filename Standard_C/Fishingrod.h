@@ -22,7 +22,7 @@ typedef unsigned long long uint64_t;
 #endif /*__UINT_T__*/
 
 //rounds of Fishingrod;
-#define ROUNDS 12
+#define ROUNDS 18
 
 //The 8-bit sbox for Fishingrod, same as AES
 static const uint8_t sbox[256] = {
@@ -69,3 +69,74 @@ static const uint8_t multiply2[256] = {
 #define fishingrod_encrypt(plain, key, cipher) fishingrod_encrypt_rounds((plain), (key), ROUNDS, (cipher))
 #define fishingrod_decrypt(cipher, key, plain) fishingrod_decrypt_rounds((cipher), (key), ROUNDS, (plain))
 
+void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const uint8_t rounds, uint8_t *cipher)
+{
+		uint8_t lstate[8];
+    uint8_t rstate[8];
+		uint8_t temp_state[8];
+		uint8_t u,v = 0;
+		uint8_t round_key[8];
+		uint8_t i;
+
+    //initialize the key and the state;
+		round_key[0] = key[0];
+		round_key[1] = key[1];
+		round_key[2] = key[2];
+		round_key[3] = key[3];
+		round_key[4] = key[4];
+		round_key[5] = key[5];
+		round_key[6] = key[6];
+		round_key[7] = key[7];
+
+    //initialize the L and R states;
+    lstate[0] = plain[0];
+		lstate[1] = plain[1];
+		lstate[2] = plain[2];
+		lstate[3] = plain[3];
+		lstate[4] = plain[4];
+		lstate[5] = plain[5];
+		lstate[6] = plain[6];
+		lstate[7] = plain[7];
+
+    rstate[0] = plain[8];
+		rstate[1] = plain[9];
+		rstate[2] = plain[10];
+		rstate[3] = plain[11];
+		rstate[4] = plain[12];
+		rstate[5] = plain[13];
+		rstate[6] = plain[14];
+		rstate[7] = plain[15];
+
+    //Add roundkey K_i;
+    temp_state[0] = lstate[0] & round_key[0];
+		temp_state[1] = lstate[1] & round_key[1];
+		temp_state[2] = lstate[2] & round_key[2];
+		temp_state[3] = lstate[3] & round_key[3];
+		temp_state[4] = lstate[4] & round_key[4];
+		temp_state[5] = lstate[5] & round_key[5];
+		temp_state[6] = lstate[6] & round_key[6];
+		temp_state[7] = lstate[7] & round_key[7];
+
+    //Xor with R_i;
+    temp_state[0] = temp_state[0] ^ rstate[0];
+    temp_state[1] = temp_state[1] ^ rstate[1];
+    temp_state[2] = temp_state[2] ^ rstate[2];
+    temp_state[3] = temp_state[3] ^ rstate[3];
+    temp_state[4] = temp_state[4] ^ rstate[4];
+    temp_state[5] = temp_state[5] ^ rstate[5];
+    temp_state[6] = temp_state[6] ^ rstate[6];
+    temp_state[7] = temp_state[7] ^ rstate[7];
+
+
+    //subbytes with AES 8-bit sbox
+
+    
+    
+
+
+
+
+
+
+
+#endif /*FISHINGROD_H_*/
