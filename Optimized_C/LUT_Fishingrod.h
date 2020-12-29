@@ -22,7 +22,7 @@ typedef unsigned long long uint64_t;
 #endif /*__UINT_T__*/
 
 //rounds of Fishingrod;
-#define ROUNDS 12
+#define ROUNDS 18
 
 //The 8-bit sbox for Fishingrod, same as AES
 static const uint8_t sbox[256] = {
@@ -57,3 +57,6 @@ uint8_t xtime(uint8_t input)
 
 #define fishingrod_encrypt(plain, key, cipher) fishingrod_encrypt_rounds((plain), (key), ROUNDS, (cipher))
 #define fishingrod_decrypt(cipher, key, plain) fishingrod_decrypt_rounds((cipher), (key), ROUNDS, (plain))
+
+
+#endif /*LUT_FISHINGROD_H_*/
