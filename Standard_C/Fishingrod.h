@@ -44,78 +44,67 @@ static const uint8_t sbox[256] = {
   0xe1, 0xf8, 0x98, 0x11, 0x69, 0xd9, 0x8e, 0x94, 0x9b, 0x1e, 0x87, 0xe9, 0xce, 0x55, 0x28, 0xdf,
   0x8c, 0xa1, 0x89, 0x0d, 0xbf, 0xe6, 0x42, 0x68, 0x41, 0x99, 0x2d, 0x0f, 0xb0, 0x54, 0xbb, 0x16 };
 
-//Tables for the MixStates step, same as AES MixColumns
-//Look-up table for 2 * x
-static const uint8_t multiply2[256] = {
-		0x00, 0x02, 0x04, 0x06, 0x08, 0x0a, 0x0c, 0x0e, 0x10, 0x12, 0x14, 0x16, 0x18, 0x1a, 0x1c, 0x1e,
-		0x20, 0x22, 0x24, 0x26, 0x28, 0x2a, 0x2c, 0x2e, 0x30, 0x32, 0x34, 0x36, 0x38, 0x3a, 0x3c, 0x3e,
-		0x40, 0x42, 0x44, 0x46, 0x48, 0x4a, 0x4c, 0x4e, 0x50, 0x52, 0x54, 0x56, 0x58, 0x5a, 0x5c, 0x5e,
-		0x60, 0x62, 0x64, 0x66, 0x68, 0x6a, 0x6c, 0x6e, 0x70, 0x72, 0x74, 0x76, 0x78, 0x7a, 0x7c, 0x7e,
-		0x80, 0x82, 0x84, 0x86, 0x88, 0x8a, 0x8c, 0x8e, 0x90, 0x92, 0x94, 0x96, 0x98, 0x9a, 0x9c, 0x9e,
-		0xa0, 0xa2, 0xa4, 0xa6, 0xa8, 0xaa, 0xac, 0xae, 0xb0, 0xb2, 0xb4, 0xb6, 0xb8, 0xba, 0xbc, 0xbe,
-		0xc0, 0xc2, 0xc4, 0xc6, 0xc8, 0xca, 0xcc, 0xce, 0xd0, 0xd2, 0xd4, 0xd6, 0xd8, 0xda, 0xdc, 0xde,
-		0xe0, 0xe2, 0xe4, 0xe6, 0xe8, 0xea, 0xec, 0xee, 0xf0, 0xf2, 0xf4, 0xf6, 0xf8, 0xfa, 0xfc, 0xfe,
-		0x1b, 0x19, 0x1f, 0x1d, 0x13, 0x11, 0x17, 0x15, 0x0b, 0x09, 0x0f, 0x0d, 0x03, 0x01, 0x07, 0x05,
-		0x3b, 0x39, 0x3f, 0x3d, 0x33, 0x31, 0x37, 0x35, 0x2b, 0x29, 0x2f, 0x2d, 0x23, 0x21, 0x27, 0x25,
-		0x5b, 0x59, 0x5f, 0x5d, 0x53, 0x51, 0x57, 0x55, 0x4b, 0x49, 0x4f, 0x4d, 0x43, 0x41, 0x47, 0x45,
-		0x7b, 0x79, 0x7f, 0x7d, 0x73, 0x71, 0x77, 0x75, 0x6b, 0x69, 0x6f, 0x6d, 0x63, 0x61, 0x67, 0x65,
-		0x9b, 0x99, 0x9f, 0x9d, 0x93, 0x91, 0x97, 0x95, 0x8b, 0x89, 0x8f, 0x8d, 0x83, 0x81, 0x87, 0x85,
-		0xbb, 0xb9, 0xbf, 0xbd, 0xb3, 0xb1, 0xb7, 0xb5, 0xab, 0xa9, 0xaf, 0xad, 0xa3, 0xa1, 0xa7, 0xa5,
-		0xdb, 0xd9, 0xdf, 0xdd, 0xd3, 0xd1, 0xd7, 0xd5, 0xcb, 0xc9, 0xcf, 0xcd, 0xc3, 0xc1, 0xc7, 0xc5,
-		0xfb, 0xf9, 0xff, 0xfd, 0xf3, 0xf1, 0xf7, 0xf5, 0xeb, 0xe9, 0xef, 0xed, 0xe3, 0xe1, 0xe7, 0xe5,
-};
-
+//Multiply * 2 without using LUT
+uint8_t xtime(uint8_t input)
+{
+    return (input<<1) ^ (((input>>7) & 1) * 0x1b);
+	
+	//if((input & 0x80) == 0)
+	//   return (input << 1) ^ 0x00;
+	//else
+	//   return (input << 1) ^ 0x1B;
+}
 
 #define fishingrod_encrypt(plain, key, cipher) fishingrod_encrypt_rounds((plain), (key), ROUNDS, (cipher))
 #define fishingrod_decrypt(cipher, key, plain) fishingrod_decrypt_rounds((cipher), (key), ROUNDS, (plain))
 
 void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const uint8_t rounds, uint8_t *cipher)
 {
-		uint8_t lstate[8];
+	uint8_t lstate[8];
     uint8_t rstate[8];
-		uint8_t temp_state[8];
-		uint8_t u,v = 0;
-		uint8_t round_key[8];
-		uint8_t i;
+	uint8_t temp_state[8];
+	uint8_t u,v,w= 0;
+	uint8_t round_key[8];
+	uint8_t i;
 
     //initialize the key and the state;
-		round_key[0] = key[0];
-		round_key[1] = key[1];
-		round_key[2] = key[2];
-		round_key[3] = key[3];
-		round_key[4] = key[4];
-		round_key[5] = key[5];
-		round_key[6] = key[6];
-		round_key[7] = key[7];
+	round_key[0] = key[0];
+	round_key[1] = key[1];
+	round_key[2] = key[2];
+	round_key[3] = key[3];
+	round_key[4] = key[4];
+	round_key[5] = key[5];
+	round_key[6] = key[6];
+	round_key[7] = key[7];
 
     //initialize the L and R states;
     lstate[0] = plain[0];
-		lstate[1] = plain[1];
-		lstate[2] = plain[2];
-		lstate[3] = plain[3];
-		lstate[4] = plain[4];
-		lstate[5] = plain[5];
-		lstate[6] = plain[6];
-		lstate[7] = plain[7];
+	lstate[1] = plain[1];
+	lstate[2] = plain[2];
+	lstate[3] = plain[3];
+	lstate[4] = plain[4];
+	lstate[5] = plain[5];
+	lstate[6] = plain[6];
+	lstate[7] = plain[7];
 
     rstate[0] = plain[8];
-		rstate[1] = plain[9];
-		rstate[2] = plain[10];
-		rstate[3] = plain[11];
-		rstate[4] = plain[12];
-		rstate[5] = plain[13];
-		rstate[6] = plain[14];
-		rstate[7] = plain[15];
+	rstate[1] = plain[9];
+	rstate[2] = plain[10];
+	rstate[3] = plain[11];
+	rstate[4] = plain[12];
+	rstate[5] = plain[13];
+	rstate[6] = plain[14];
+	rstate[7] = plain[15];
 
     //Add roundkey K_i;
     temp_state[0] = lstate[0] & round_key[0];
-		temp_state[1] = lstate[1] & round_key[1];
-		temp_state[2] = lstate[2] & round_key[2];
-		temp_state[3] = lstate[3] & round_key[3];
-		temp_state[4] = lstate[4] & round_key[4];
-		temp_state[5] = lstate[5] & round_key[5];
-		temp_state[6] = lstate[6] & round_key[6];
-		temp_state[7] = lstate[7] & round_key[7];
+	temp_state[1] = lstate[1] & round_key[1];
+	temp_state[2] = lstate[2] & round_key[2];
+	temp_state[3] = lstate[3] & round_key[3];
+	temp_state[4] = lstate[4] & round_key[4];
+	temp_state[5] = lstate[5] & round_key[5];
+	temp_state[6] = lstate[6] & round_key[6];
+	temp_state[7] = lstate[7] & round_key[7];
 
     //Xor with R_i;
     temp_state[0] = temp_state[0] ^ rstate[0];
@@ -127,8 +116,77 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const u
     temp_state[6] = temp_state[6] ^ rstate[6];
     temp_state[7] = temp_state[7] ^ rstate[7];
 
+    //subbytes with AES 8-bit sbox, combine with cyclic left rotating two bytes;
+	temp_state[6] = sbox[temp_state[0]];
+    temp_state[7] = sbox[temp_state[1]];
+    temp_state[0] = sbox[temp_state[2]];
+    temp_state[1] = sbox[temp_state[3]];
+    temp_state[2] = sbox[temp_state[4]];
+    temp_state[3] = sbox[temp_state[5]];
+    temp_state[4] = sbox[temp_state[6]];
+    temp_state[5] = sbox[temp_state[7]];
 
-    //subbytes with AES 8-bit sbox
+	//MDS permutation with AES MixColumns, without using LUT;
+	u = temp_state[0] ^ temp_state[1] ^ temp_state[2] ^ temp_state[3];
+    v = temp_state[0] ^ temp_state[1];
+    v = xtime(v);
+	w = temp_state[0];
+    temp_state[0] = temp_state[0] ^ v ^ u;
+
+    v = temp_state[1] ^ temp_state[2];
+    v = xtime(v);
+    temp_state[1] = temp_state[1] ^ v ^ u;
+
+    v = temp_state[2] ^ temp_state[3];
+    v = xtime(v);
+    temp_state[2] = temp_state[2] ^ v ^ u;
+
+    v = temp_state[3] ^ w;
+    v = xtime(v);
+    temp_state[3] = temp_state[3] ^ v ^ u;
+
+    u = temp_state[4] ^ temp_state[5] ^ temp_state[6] ^ temp_state[7];
+    v = temp_state[4] ^ temp_state[5];
+    v = xtime(v);
+	w = temp_state[4];
+    temp_state[4] = temp_state[4] ^ v ^ u;
+
+    v = temp_state[5] ^ temp_state[6];
+    v = xtime(v);
+    temp_state[5] = temp_state[5] ^ v ^ u;
+
+    v = temp_state[6] ^ temp_state[7];
+    v = xtime(v);
+    temp_state[6] = temp_state[6] ^ v ^ u;
+
+    v = temp_state[7] ^ w;
+    v = xtime(v);
+    temp_state[7] = temp_state[7] ^ v ^ u;
+
+	//output L_i+1 of round function
+    cipher[0] = (temp_state[0] & round_key[0]) ^ rstate[0];
+	cipher[1] = (temp_state[1] & round_key[1]) ^ rstate[1];
+    cipher[2] = (temp_state[2] & round_key[2]) ^ rstate[2];
+	cipher[3] = (temp_state[3] & round_key[3]) ^ rstate[3];
+    cipher[4] = (temp_state[4] & round_key[4]) ^ rstate[4];
+	cipher[5] = (temp_state[5] & round_key[5]) ^ rstate[5];
+	cipher[6] = (temp_state[6] & round_key[6]) ^ rstate[6];
+    cipher[7] = (temp_state[7] & round_key[7]) ^ rstate[7];
+
+    //output R_i+1 of round function
+	cipher[8] = lstate[0] ^ temp_state[0];
+    cipher[9] = lstate[1] ^ temp_state[1];
+    cipher[10] = lstate[2] ^ temp_state[2];
+    cipher[11] = lstate[3] ^ temp_state[3];
+    cipher[12] = lstate[4] ^ temp_state[4];
+    cipher[13] = lstate[5] ^ temp_state[5];
+    cipher[14] = lstate[6] ^ temp_state[6];
+    cipher[15] = lstate[7] ^ temp_state[7];
+
+}
+
+
+	
 
     
     
