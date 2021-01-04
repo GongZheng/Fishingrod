@@ -117,14 +117,16 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const u
     temp_state[7] = temp_state[7] ^ rstate[7];
 
     //subbytes with AES 8-bit sbox, combine with cyclic left rotating two bytes;
-	temp_state[6] = sbox[temp_state[0]];
-    temp_state[7] = sbox[temp_state[1]];
+	u = sbox[temp_state[0]];
+    v = sbox[temp_state[1]];
     temp_state[0] = sbox[temp_state[2]];
     temp_state[1] = sbox[temp_state[3]];
     temp_state[2] = sbox[temp_state[4]];
     temp_state[3] = sbox[temp_state[5]];
     temp_state[4] = sbox[temp_state[6]];
     temp_state[5] = sbox[temp_state[7]];
+    temp_state[6] = u;
+    temp_state[7] = v;
 
 	//MDS permutation with AES MixColumns, without using LUT;
 	u = temp_state[0] ^ temp_state[1] ^ temp_state[2] ^ temp_state[3];
