@@ -58,6 +58,11 @@ uint8_t xtime(uint8_t input)
 #define fishingrod_encrypt(plain, key, cipher) fishingrod_encrypt_rounds((plain), (key), ROUNDS, (cipher))
 #define fishingrod_decrypt(cipher, key, plain) fishingrod_decrypt_rounds((cipher), (key), ROUNDS, (plain))
 
+void fishingrod_key_schedule(uint8_t *round_key, const uint8_t rounds)
+{
+    //TBD
+}
+
 void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const uint8_t rounds, uint8_t *cipher)
 {
 	uint8_t lstate[8];
@@ -96,94 +101,153 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const u
 	rstate[6] = plain[14];
 	rstate[7] = plain[15];
 
-    //Add roundkey K_i;
-    temp_state[0] = lstate[0] & round_key[0];
-	temp_state[1] = lstate[1] & round_key[1];
-	temp_state[2] = lstate[2] & round_key[2];
-	temp_state[3] = lstate[3] & round_key[3];
-	temp_state[4] = lstate[4] & round_key[4];
-	temp_state[5] = lstate[5] & round_key[5];
-	temp_state[6] = lstate[6] & round_key[6];
-	temp_state[7] = lstate[7] & round_key[7];
+    for(i=0; i<ROUNDS; i++)
+    {
+        //Add roundkey K_i;
+        temp_state[0] = lstate[0] & round_key[0];
+        temp_state[1] = lstate[1] & round_key[1];
+        temp_state[2] = lstate[2] & round_key[2];
+        temp_state[3] = lstate[3] & round_key[3];
+        temp_state[4] = lstate[4] & round_key[4];
+        temp_state[5] = lstate[5] & round_key[5];
+        temp_state[6] = lstate[6] & round_key[6];
+        temp_state[7] = lstate[7] & round_key[7];
 
-    //Xor with R_i;
-    temp_state[0] = temp_state[0] ^ rstate[0];
-    temp_state[1] = temp_state[1] ^ rstate[1];
-    temp_state[2] = temp_state[2] ^ rstate[2];
-    temp_state[3] = temp_state[3] ^ rstate[3];
-    temp_state[4] = temp_state[4] ^ rstate[4];
-    temp_state[5] = temp_state[5] ^ rstate[5];
-    temp_state[6] = temp_state[6] ^ rstate[6];
-    temp_state[7] = temp_state[7] ^ rstate[7];
+        //Xor with R_i;
+        temp_state[0] = temp_state[0] ^ rstate[0];
+        temp_state[1] = temp_state[1] ^ rstate[1];
+        temp_state[2] = temp_state[2] ^ rstate[2];
+        temp_state[3] = temp_state[3] ^ rstate[3];
+        temp_state[4] = temp_state[4] ^ rstate[4];
+        temp_state[5] = temp_state[5] ^ rstate[5];
+        temp_state[6] = temp_state[6] ^ rstate[6];
+        temp_state[7] = temp_state[7] ^ rstate[7];
 
-    //subbytes with AES 8-bit sbox, combine with cyclic left rotating two bytes;
-	u = sbox[temp_state[0]];
-    v = sbox[temp_state[1]];
-    temp_state[0] = sbox[temp_state[2]];
-    temp_state[1] = sbox[temp_state[3]];
-    temp_state[2] = sbox[temp_state[4]];
-    temp_state[3] = sbox[temp_state[5]];
-    temp_state[4] = sbox[temp_state[6]];
-    temp_state[5] = sbox[temp_state[7]];
-    temp_state[6] = u;
-    temp_state[7] = v;
+        //subbytes with AES 8-bit sbox, combine with cyclic left rotating two bytes;
+        u = sbox[temp_state[0]];
+        v = sbox[temp_state[1]];
+        temp_state[0] = sbox[temp_state[2]];
+        temp_state[1] = sbox[temp_state[3]];
+        temp_state[2] = sbox[temp_state[4]];
+        temp_state[3] = sbox[temp_state[5]];
+        temp_state[4] = sbox[temp_state[6]];
+        temp_state[5] = sbox[temp_state[7]];
+        temp_state[6] = u;
+        temp_state[7] = v;
 
-	//MDS permutation with AES MixColumns, without using LUT;
-	u = temp_state[0] ^ temp_state[1] ^ temp_state[2] ^ temp_state[3];
-    v = temp_state[0] ^ temp_state[1];
-    v = xtime(v);
-	w = temp_state[0];
-    temp_state[0] = temp_state[0] ^ v ^ u;
+        //MDS permutation with AES MixColumns, without using LUT;
+        u = temp_state[0] ^ temp_state[1] ^ temp_state[2] ^ temp_state[3];
+        v = temp_state[0] ^ temp_state[1];
+        v = xtime(v);
+        w = temp_state[0];
+        temp_state[0] = temp_state[0] ^ v ^ u;
 
-    v = temp_state[1] ^ temp_state[2];
-    v = xtime(v);
-    temp_state[1] = temp_state[1] ^ v ^ u;
+        v = temp_state[1] ^ temp_state[2];
+        v = xtime(v);
+        temp_state[1] = temp_state[1] ^ v ^ u;
 
-    v = temp_state[2] ^ temp_state[3];
-    v = xtime(v);
-    temp_state[2] = temp_state[2] ^ v ^ u;
+        v = temp_state[2] ^ temp_state[3];
+        v = xtime(v);
+        temp_state[2] = temp_state[2] ^ v ^ u;
 
-    v = temp_state[3] ^ w;
-    v = xtime(v);
-    temp_state[3] = temp_state[3] ^ v ^ u;
+        v = temp_state[3] ^ w;
+        v = xtime(v);
+        temp_state[3] = temp_state[3] ^ v ^ u;
 
-    u = temp_state[4] ^ temp_state[5] ^ temp_state[6] ^ temp_state[7];
-    v = temp_state[4] ^ temp_state[5];
-    v = xtime(v);
-	w = temp_state[4];
-    temp_state[4] = temp_state[4] ^ v ^ u;
+        u = temp_state[4] ^ temp_state[5] ^ temp_state[6] ^ temp_state[7];
+        v = temp_state[4] ^ temp_state[5];
+        v = xtime(v);
+        w = temp_state[4];
+        temp_state[4] = temp_state[4] ^ v ^ u;
 
-    v = temp_state[5] ^ temp_state[6];
-    v = xtime(v);
-    temp_state[5] = temp_state[5] ^ v ^ u;
+        v = temp_state[5] ^ temp_state[6];
+        v = xtime(v);
+        temp_state[5] = temp_state[5] ^ v ^ u;
 
-    v = temp_state[6] ^ temp_state[7];
-    v = xtime(v);
-    temp_state[6] = temp_state[6] ^ v ^ u;
+        v = temp_state[6] ^ temp_state[7];
+        v = xtime(v);
+        temp_state[6] = temp_state[6] ^ v ^ u;
 
-    v = temp_state[7] ^ w;
-    v = xtime(v);
-    temp_state[7] = temp_state[7] ^ v ^ u;
+        v = temp_state[7] ^ w;
+        v = xtime(v);
+        temp_state[7] = temp_state[7] ^ v ^ u;
 
-	//output L_i+1 of round function
-    cipher[0] = (temp_state[0] & round_key[0]) ^ rstate[0];
-	cipher[1] = (temp_state[1] & round_key[1]) ^ rstate[1];
-    cipher[2] = (temp_state[2] & round_key[2]) ^ rstate[2];
-	cipher[3] = (temp_state[3] & round_key[3]) ^ rstate[3];
-    cipher[4] = (temp_state[4] & round_key[4]) ^ rstate[4];
-	cipher[5] = (temp_state[5] & round_key[5]) ^ rstate[5];
-	cipher[6] = (temp_state[6] & round_key[6]) ^ rstate[6];
-    cipher[7] = (temp_state[7] & round_key[7]) ^ rstate[7];
+        //output L_i+1 of round function (before the exchange with R_i+1)
+        lstate[0] = lstate[0] ^ temp_state[0];
+        lstate[1] = lstate[1] ^ temp_state[1];
+        lstate[2] = lstate[2] ^ temp_state[2];
+        lstate[3] = lstate[3] ^ temp_state[3];
+        lstate[4] = lstate[4] ^ temp_state[4];
+        lstate[5] = lstate[5] ^ temp_state[5];
+        lstate[6] = lstate[6] ^ temp_state[6];
+        lstate[7] = lstate[7] ^ temp_state[7];
 
-    //output R_i+1 of round function
-	cipher[8] = lstate[0] ^ temp_state[0];
-    cipher[9] = lstate[1] ^ temp_state[1];
-    cipher[10] = lstate[2] ^ temp_state[2];
-    cipher[11] = lstate[3] ^ temp_state[3];
-    cipher[12] = lstate[4] ^ temp_state[4];
-    cipher[13] = lstate[5] ^ temp_state[5];
-    cipher[14] = lstate[6] ^ temp_state[6];
-    cipher[15] = lstate[7] ^ temp_state[7];
+        //output R_i+1 of round function (before the exchange with R_i+1)
+        rstate[0] = (temp_state[0] & round_key[0]) ^ rstate[0];
+	    rstate[1] = (temp_state[1] & round_key[1]) ^ rstate[1];
+        rstate[2] = (temp_state[2] & round_key[2]) ^ rstate[2];
+	    rstate[3] = (temp_state[3] & round_key[3]) ^ rstate[3];
+        rstate[4] = (temp_state[4] & round_key[4]) ^ rstate[4];
+	    rstate[5] = (temp_state[5] & round_key[5]) ^ rstate[5];
+	    rstate[6] = (temp_state[6] & round_key[6]) ^ rstate[6];
+        rstate[7] = (temp_state[7] & round_key[7]) ^ rstate[7];
+
+        //exchange the L and R;
+        u = lstate[0];
+        lstate[0] = rstate[0];
+        rstate[0] = u;
+
+        u = lstate[1];
+        lstate[1] = rstate[1];
+        rstate[1] = u;
+
+        u = lstate[2];
+        lstate[2] = rstate[2];
+        rstate[2] = u;
+        
+        u = lstate[3];
+        lstate[3] = rstate[3];
+        rstate[3] = u;
+
+        u = lstate[4];
+        lstate[4] = rstate[4];
+        rstate[4] = u;
+
+        u = lstate[5];
+        lstate[5] = rstate[5];
+        rstate[5] = u;
+
+        u = lstate[6];
+        lstate[6] = rstate[6];
+        rstate[6] = u;
+
+        u = lstate[7];
+        lstate[7] = rstate[7];
+        rstate[7] = u;
+
+        //update the round key
+        fishingrod_key_schedule(round_key, i);
+    
+    }
+
+	//final output of full round fishingrod
+    cipher[0] = lstate[0];
+	cipher[1] = lstate[1];
+    cipher[2] = lstate[2];
+	cipher[3] = lstate[3];
+    cipher[4] = lstate[4];
+	cipher[5] = lstate[5];
+	cipher[6] = lstate[6];
+    cipher[7] = lstate[7];
+
+	cipher[8] = rstate[0];
+    cipher[9] = rstate[1];
+    cipher[10] = rstate[2];
+    cipher[11] = rstate[3];
+    cipher[12] = rstate[4];
+    cipher[13] = rstate[5];
+    cipher[14] = rstate[6];
+    cipher[15] = rstate[7];
 
 }
 
