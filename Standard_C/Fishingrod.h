@@ -250,16 +250,4 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const u
 
 }
 
-
-	
-
-    
-    
-
-
-
-
-
-
-
 #endif /*FISHINGROD_H_*/
