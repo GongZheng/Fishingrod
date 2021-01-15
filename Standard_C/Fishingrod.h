@@ -55,7 +55,7 @@ uint8_t xtime(uint8_t input)
 }
 
 //The LFSR function D used in the key schedule;
-void lfsr(uint32_t round_key_value)
+uint32_t lfsr(uint32_t round_key_value)
 {
     return (round_key_value ^ 
     ((round_key_value << 2) ^ (round_key_value >> 30)) ^ 
@@ -66,39 +66,45 @@ void lfsr(uint32_t round_key_value)
 #define fishingrod_decrypt(cipher, key, plain) fishingrod_decrypt_rounds((cipher), (key), ROUNDS, (plain))
 
 //Precompute all the subkeys in advance;
-void fishingrod_key_expansion(uint32_t *round_key, const uint32_t *key, const uint8_t rounds)
-{
-    uint8_t i;
+//void fishingrod_key_expansion(uint32_t *round_key, const uint32_t *key, const uint8_t rounds)
+//{
+//    uint8_t i;
+//
+//    round_key[0] = key[0];
+//    round_key[1] = key[1];
+//    round_key[2] = key[2];
+//    round_key[3] = key[3];
+//    
+//    for(i=1; i<=rounds; i++)
+//    {
+//        round_key[(i-1)+4] = lfsr(round_key[(i-1)+3] ^ round_key[i-1]);
+//    };
+//
+//
+//}
 
-    round_key[0] = key[0];
-    round_key[1] = key[1];
-    round_key[2] = key[2];
-    round_key[3] = key[3];
-    
-    for(i=1; i<=rounds; i++)
-    {
-        round_key[(i-1)+4] = lfsr(round_key[(i-1)+3] ^ round_key[i-1]);
-    };
-
-
-}
-
-//Update the subkey on the fly;
-void fishingrod_key_update(uint32_t *round_key)
+//Update the subkey on the fly; keystate is the u
+void fishingrod_key_update(uint32_t *keystate, uint8_t *round_key)
 {
     uint32_t temp1, temp2;
 
-    temp1 = lfsr(round_key[3] ^ round_key[0]);
-    temp2 = lfsr(temp1 ^ round_key[1]);
+    uint64_t * ptr_keystate, * ptr_round_key;
 
-    round_key[0] = round_key[2];
-    round_key[1] = round_key[3];
-    round_key[2] = temp1;
-    round_key[3] = temp2;
+    ptr_keystate = (uint64_t * )  keystate;
+    ptr_round_key = (uint64_t * ) round_key;
+    ptr_round_key[0] = ptr_keystate[0];
+
+    temp1 = lfsr(keystate[3] ^ keystate[0]);
+    temp2 = lfsr(temp1 ^ keystate[1]);
+
+    keystate[0] = keystate[2];
+    keystate[1] = keystate[3];
+    keystate[2] = temp1;
+    keystate[3] = temp2;
 
 }
 
-void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const uint8_t rounds, uint8_t *cipher)
+void fishingrod_encrypt_rounds(const uint8_t *plain, uint32_t *key, const uint8_t rounds, uint8_t *cipher)
 {
 	uint8_t lstate[8];
     uint8_t rstate[8];
@@ -261,7 +267,7 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, const u
         rstate[7] = u;
 
         //update the round key
-        fishingrod_key_schedule(round_key, i);
+        fishingrod_key_update(key, round_key);
     
     }
 
