@@ -3,6 +3,7 @@
  *
  *  Description: Fishingrod-128 with a clear structure.
  *  Created on: 2020-12-28
+ *  Last updated: 2021-02-16
  *  Coding: Zheng Gong, Jinhai Chen.
  */
 
@@ -193,7 +194,6 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, uint64_t *round_key64, uint
         temp_state[7] = v;
 
         //MDS permutation with AES MixColumns, without using LUT;
-        //MDS permutation with AES MixColumns, without using LUT;
         u = temp_state[0];
         v = temp_state[1];
         w = temp_state[2];
@@ -271,7 +271,6 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, uint64_t *round_key64, uint
         temp_state[6] = u;
         temp_state[7] = v;
 
-        //MDS permutation with AES MixColumns, without using LUT;
         //MDS permutation with AES MixColumns, without using LUT;
         u = temp_state[0];
         v = temp_state[1];
