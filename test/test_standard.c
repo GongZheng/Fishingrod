@@ -27,8 +27,8 @@ uint64_t end_rdtsc()
 
 int main() {
     uint32_t master_key[4] = {0x00000001, 0x00000111, 0x00000000, 0x000000000};
-    uint64_t round_key[ROUNDS];
-    key_schedule(master_key, round_key);
+    uint32_t round_key[ROUNDS*2];
+    fishingrod_key_schedule(master_key, round_key);
 
 
     uint8_t plain[16] = {
@@ -60,7 +60,7 @@ int main() {
 
     begin = start_rdtsc();
     for(int i=0;i<TEST;i++) 
-        key_schedule(master_key, round_key);
+        fishingrod_key_schedule(master_key, round_key);
 
     
     end = end_rdtsc();
