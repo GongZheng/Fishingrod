@@ -344,7 +344,7 @@ void fishingrod_key_schedule(const uint32_t *master_key, uint32_t *round_key) {
     round_key[33] = lfsr(round_key[32]^round_key[25] );
     round_key[34] = ~round_key[32];
     round_key[35] = ~round_key[33];
-    
+
 }
 
 
@@ -384,6 +384,10 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, uint8_t
     PUTU32(cipher+4   , L1);
     PUTU32(cipher+8   , R0);
     PUTU32(cipher+12  , R1);
+}
+
+void fishingrod_decrypt_rounds(const uint8_t *cipher, uint32_t *round_key64, uint8_t *plain) {
+    
 }
 
 #endif /*LUT_FISHINGROD_H_*/
