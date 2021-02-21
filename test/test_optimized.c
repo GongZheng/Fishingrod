@@ -25,6 +25,45 @@ uint64_t end_rdtsc()
     return __rdtsc();
 }
 
+void test_one_round() {
+    uint64_t begin, end, ans;
+    
+    u32 L0, L1, R0, R1, s0, s1, t0, t1;     
+    L0 = 0x11223344;
+    L1 = 0xaabbccdd;
+    R0 = 0xad3dd336;
+    R1 = 0xaaddd5dd;  
+    u32 rk[2] = {0x12345670,0xaabbaabb};
+
+    begin = start_rdtsc();
+    for(int i=0;i<TEST;i++) {
+        s0 = (L0 & rk[0]) ^ R0;
+        s1 = (L1 & rk[1]) ^ R1;
+
+        t0 =    Te0[ (s0>>16) & 0xff] ^
+                Te1[  s0>>24        ] ^
+                Te2[  s1      & 0xff] ^
+                Te3[ (s1>> 8) & 0xff];
+
+        t1 =    Te0[ (s1>>16) & 0xff] ^ 
+                Te1[  s1>>24        ] ^
+                Te2[  s0      & 0xff] ^
+                Te3[ (s0>> 8) & 0xff];
+
+        s0 = L0;
+        s1 = L1;
+        L0 = (t0 & rk[0]) ^ R0;
+        L1 = (t1 & rk[1]) ^ R1;
+        R0 = s0 ^ t0;
+        R1 = s1 ^ t1;
+    }
+    end = end_rdtsc();
+    ans = end - begin;
+    printf("One round cost %lu CPU cycles\n", ans/TEST);
+    printf("%08X",L0);
+}
+
+
 int main() {
     uint32_t master_key[4] = {0x00000001, 0x00000111, 0x00000000, 0x000000000};
     uint32_t round_key[ROUNDS*2];
@@ -65,6 +104,8 @@ int main() {
     end = end_rdtsc();
     ans = end - begin;
     printf("KS cost %lu CPU cycles\n", ans/TEST);
+
+    test_one_round();
 
     return 0;
 }
