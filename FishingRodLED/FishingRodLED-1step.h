@@ -1203,4 +1203,4 @@ void fishingrod_encrypt_rounds(const uint8_t *plain, const uint8_t *key, uint8_t
 }
 
 
-#endif /*LUT_FISHINGROD_H_*/
+#endif /*FISHINGROD_LED_H_*/
