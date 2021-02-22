@@ -59,7 +59,7 @@ void test_one_round() {
     }
     end = end_rdtsc();
     ans = end - begin;
-    printf("One round cost %lu CPU cycles\n", ans/TEST);
+    printf("One round cost %.1f CPU cycles\n",1.0* ans/TEST);
     printf("%08X",L0);
 }
 
@@ -93,7 +93,7 @@ int main() {
     
     end = end_rdtsc();
     ans = end - begin;
-    printf("cost %lu CPU cycles\n", ans/TEST);
+    printf("cost %.1f CPU cycles\n", 1.0*ans/TEST);
 
 
     begin = start_rdtsc();
@@ -103,7 +103,7 @@ int main() {
     
     end = end_rdtsc();
     ans = end - begin;
-    printf("KS cost %lu CPU cycles\n", ans/TEST);
+    printf("KS cost %.1f CPU cycles\n", 1.0*ans/TEST);
 
     test_one_round();
 

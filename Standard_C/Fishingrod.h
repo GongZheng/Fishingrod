@@ -109,18 +109,8 @@ void fishingrod_key_update(uint32_t *keystate, uint8_t *round_key)
 
 }
 
+
 void fishingrod_key_schedule(const uint32_t *master_key, uint32_t *round_key) {
-    int i,j;
-    round_key[0] = master_key[0];
-    round_key[1] = master_key[1];
-    round_key[2] = ~round_key[0];
-    round_key[3] = ~round_key[1];
-
-    round_key[4] = master_key[2];
-    round_key[5] = master_key[3];
-    round_key[6] = ~round_key[4];
-    round_key[7] = ~round_key[5];
-
     round_key[8] = lfsr(round_key[5]^round_key[0] );
     round_key[9] = lfsr(round_key[8]^round_key[1] );
     round_key[10] = ~round_key[8];
@@ -149,8 +139,13 @@ void fishingrod_key_schedule(const uint32_t *master_key, uint32_t *round_key) {
     round_key[33] = lfsr(round_key[32]^round_key[25] );
     round_key[34] = ~round_key[32];
     round_key[35] = ~round_key[33];
-    
+    round_key[36] = lfsr(round_key[33]^round_key[28] );
+    round_key[37] = lfsr(round_key[36]^round_key[29] );
+    round_key[38] = ~round_key[36];
+    round_key[39] = ~round_key[37];
 }
+
+
 
 void fishingrod_encrypt_rounds(const uint8_t *plain, uint32_t *round_key64, uint8_t *cipher)
 {
